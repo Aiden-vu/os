@@ -1,12 +1,23 @@
-all: bootloader bootdisk
+BUILD_DIR=build
+BOOTLOADER=$(BUILD_DIR)/bootloader/bootloader.o
+OS=$(BUILD_DIR)/os/sample.o
+DISK_IMG=disk.img
+
+all: bootdisk
+
+.PHONY: bootdisk bootloader os
 
 bootloader:
-	nasm -f bin bootloader.asm -o bootloader.o
+	make -C bootloader
 
-kernel:
-	nasm -f bin sample.asm -o sample.o
+os:
+	make -C os
 
-bootdisk: bootloader kernel
-	dd if=/dev/zero of=disk.img bs=512 count=2880
-	dd conv=notrunc if=bootloader.o of=disk.img bs=512 count=1 seek=0
-	dd conv=notrunc if=sample.o of=disk.img bs=512 count=1 seek=1
+bootdisk: bootloader os
+	dd if=/dev/zero of=$(DISK_IMG) bs=512 count=2880
+	dd conv=notrunc if=$(BOOTLOADER) of=$(DISK_IMG) bs=512 count=1 seek=0
+	dd conv=notrunc if=$(OS) of=$(DISK_IMG) bs=512 count=1 seek=1
+
+qemu:
+	qemu-system-i386 -machine q35 -fda $(DISK_IMG) -gdb tcp::26000 -S
+
