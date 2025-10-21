@@ -21,6 +21,9 @@ bootdisk: bootloader os
 qemu:
 	qemu-system-i386 -machine q35 -fda $(DISK_IMG) -gdb tcp::26000 -S
 
+run: bootdisk
+	qemu-system-i386 -fda $(DISK_IMG)
+
 clean:
 	make -C bootloader clean
 	make -C os clean
